@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.pytest-*/
+.keras-cache/
+.mpl-cache/
+opencode.json
+data/
+outputs/*
+!outputs/run1/
+!outputs/audit/
+outputs/audit/*
+!outputs/audit/audit_live.py
+!outputs/audit/local_api_audit.json
+!outputs/audit/local_benchmark.csv

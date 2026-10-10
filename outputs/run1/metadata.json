@@ -1,0 +1,111 @@
+{
+  "labels": [
+    "without_mask",
+    "with_mask",
+    "mask_weared_incorrect"
+  ],
+  "image_size": 224,
+  "input_range": [
+    0,
+    255
+  ],
+  "normalization": "Inside model: pixels / 127.5 - 1",
+  "face_padding": 0.18,
+  "architecture": "MobileNetV2 alpha=0.35",
+  "weights": "imagenet",
+  "seed": 42,
+  "device": "cpu",
+  "versions": {
+    "keras": "3.13.2",
+    "torch": "2.12.0",
+    "numpy": "2.4.3",
+    "pillow": "12.2.0",
+    "scikit-learn": "1.8.0"
+  },
+  "class_weight": {
+    "0": 1.892689470154259,
+    "1": 0.4201280333482209,
+    "2": 10.937984496124031
+  },
+  "head_epochs_completed": 9,
+  "fine_tune_epochs_completed": 0,
+  "samples": {
+    "train": 2822,
+    "val": 651,
+    "test": 599
+  },
+  "test_metrics": {
+    "without_mask": {
+      "precision": 0.6967213114754098,
+      "recall": 0.7727272727272727,
+      "f1-score": 0.7327586206896551,
+      "support": 110.0
+    },
+    "with_mask": {
+      "precision": 0.9265658747300216,
+      "recall": 0.9088983050847458,
+      "f1-score": 0.9176470588235294,
+      "support": 472.0
+    },
+    "mask_weared_incorrect": {
+      "precision": 0.2857142857142857,
+      "recall": 0.23529411764705882,
+      "f1-score": 0.25806451612903225,
+      "support": 17.0
+    },
+    "accuracy": 0.8647746243739566,
+    "macro avg": {
+      "precision": 0.636333823973239,
+      "recall": 0.6389732318196925,
+      "f1-score": 0.636156731880739,
+      "support": 599.0
+    },
+    "weighted avg": {
+      "precision": 0.8661695826243877,
+      "recall": 0.8647746243739566,
+      "f1-score": 0.8649748861682162,
+      "support": 599.0
+    }
+  },
+  "selected_epoch": 3,
+  "epochs_run": 9,
+  "validation_at_selected_epoch": {
+    "val_accuracy": 0.8110598921775818,
+    "val_loss": 0.38919711112976074,
+    "val_macro_f1": 0.23464566469192505
+  },
+  "test_macro_f1": 0.636156731880739,
+  "per_class_f1": {
+    "without_mask": 0.7327586206896551,
+    "with_mask": 0.9176470588235294,
+    "mask_weared_incorrect": 0.25806451612903225
+  },
+  "dataset_preparation": {
+    "seed": 42,
+    "padding": 0.18,
+    "labels": [
+      "without_mask",
+      "with_mask",
+      "mask_weared_incorrect"
+    ],
+    "source_images": 853,
+    "unique_source_groups": 848,
+    "counts": {
+      "train": {
+        "with_mask": 2239,
+        "without_mask": 497,
+        "mask_weared_incorrect": 86
+      },
+      "val": {
+        "without_mask": 110,
+        "with_mask": 521,
+        "mask_weared_incorrect": 20
+      },
+      "test": {
+        "without_mask": 110,
+        "with_mask": 472,
+        "mask_weared_incorrect": 17
+      }
+    }
+  }
+}

@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>LAB3 · Nhận diện khẩu trang theo thời gian thực</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%97%BA%EF%B8%8F%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#stage-panel">Bỏ qua tới khung hình</a>
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">LAB3</span>
+      <div>
+        <h1>Nhận diện khẩu trang theo thời gian thực</h1>
+        <p class="brand-sub">Phát hiện khuôn mặt ngay trên trình duyệt, gửi ảnh + tọa độ tới API và vẽ kết quả trả về.</p>
+      </div>
+    </div>
+    <div class="health-chip" id="healthChip" data-state="unknown">
+      <span class="health-dot" aria-hidden="true"></span>
+      <span class="health-text" id="healthText">Chưa kiểm tra máy chủ API</span>
+      <button type="button" class="btn btn-ghost btn-sm" id="btnHealth">Kiểm tra /health</button>
+    </div>
+  </header>
+
+  <div class="banner banner-warn" id="secureBanner" hidden>
+    <strong>Cảnh báo bảo mật:</strong> trình duyệt chỉ cho phép mở camera qua <code>https://</code> hoặc <code>http://localhost</code>.
+    Hãy chạy bằng <code>python serve.py</code> (xem README) rồi mở địa chỉ localhost do script in ra.
+  </div>
+
+  <main class="layout">
+    <section class="panel stage-panel" id="stage-panel">
+      <div class="panel-head">
+        <div>
+          <h2>Camera trực tiếp</h2>
+          <p class="panel-sub" id="detectorInfo">Đang khởi tạo bộ phát hiện khuôn mặt…</p>
+        </div>
+        <div class="panel-actions">
+          <label class="field-inline" for="cameraSelect">
+            <span>Camera</span>
+            <select id="cameraSelect" class="select"><option value="">Thiết bị mặc định</option></select>
+          </label>
+          <button type="button" class="btn btn-primary" id="btnCamera">Bật camera</button>
+        </div>
+      </div>
+
+      <div class="stage-wrap" id="stageWrap">
+        <div class="stage" id="stage">
+          <video id="video" playsinline autoplay muted></video>
+          <canvas id="overlay" aria-label="Lớp phủ kết quả nhận diện"></canvas>
+          <div class="stage-empty" id="stageEmpty">
+            <span class="stage-empty-icon" aria-hidden="true">📷</span>
+            <p>Camera đang tắt.</p>
+            <p class="stage-empty-hint">Nhấn <strong>Bật camera</strong> để bắt đầu. Ở chế độ đánh dấu thủ công, hãy kéo chuột trên khung hình để vẽ khung khuôn mặt.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button type="button" class="btn" id="btnOnce" disabled>Phân tích 1 lần</button>
+        <button type="button" class="btn" id="btnClearManual" disabled>Xóa khung thủ công</button>
+
+        <label class="switch" for="swAuto">
+          <input type="checkbox" id="swAuto" checked />
+          <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+          <span class="switch-label">Tự động</span>
+        </label>
+
+        <label class="switch" for="swBoxes">
+          <input type="checkbox" id="swBoxes" checked />
+          <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+          <span class="switch-label">Hiện khung</span>
+        </label>
+
+        <label class="field-inline" for="rangeInterval">
+          <span>Nhịp gửi <b id="valInterval">400</b> ms</span>
+          <input type="range" id="rangeInterval" min="150" max="3000" step="50" value="400" />
+        </label>
+
+        <label class="field-inline" for="rangeQuality">
+          <span>Chất lượng JPEG <b id="valQuality">0.85</b></span>
+          <input type="range" id="rangeQuality" min="0.40" max="0.95" step="0.05" value="0.85" />
+        </label>
+      </div>
+
+      <div class="status-line">
+        <span class="status-badge" id="statusBadge" data-state="idle">Chưa chạy</span>
+        <span class="status-text" id="statusText" role="status" aria-live="polite">Nhấn “Bật camera” để bắt đầu.</span>
+        <span class="spinner" id="spinner" hidden aria-hidden="true"></span>
+      </div>
+    </section>
+
+    <aside class="side">
+      <section class="panel">
+        <div class="panel-head"><h2>Số đo</h2></div>
+        <div class="stats-grid">
+          <div class="stat"><span class="stat-label">Độ trễ gửi–nhận</span><b class="stat-value" id="statRtt">—</b><span class="stat-unit">ms (client)</span></div>
+          <div class="stat"><span class="stat-label">Suy luận server</span><b class="stat-value" id="statServer">—</b><span class="stat-unit">ms (total_inference_ms)</span></div>
+          <div class="stat"><span class="stat-label">Toàn trình</span><b class="stat-value" id="statTotal">—</b><span class="stat-unit">ms (mã hóa + gửi + chờ)</span></div>
+          <div class="stat"><span class="stat-label">Số khuôn mặt</span><b class="stat-value" id="statFaces">—</b><span class="stat-unit">gửi / nhận</span></div>
+          <div class="stat"><span class="stat-label">Ảnh gửi</span><b class="stat-value" id="statImage">—</b><span class="stat-unit">px · <span id="statBytes">—</span></span></div>
+          <div class="stat"><span class="stat-label">Tần suất phân tích</span><b class="stat-value" id="statFps">—</b><span class="stat-unit">lần / giây</span></div>
+        </div>
+        <p class="hint">“Toàn trình” = thời gian mã hóa ảnh + thời gian chờ server trả kết quả, đo ngay trên trình duyệt này.</p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Kết quả từng khuôn mặt</h2>
+          <span class="chip" id="faceCountChip">0 mặt</span>
+        </div>
+        <ul class="face-list" id="faceList">
+          <li class="empty">Chưa có kết quả. Bật camera rồi đưa khuôn mặt vào khung hình.</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Cấu hình</h2></div>
+        <div class="form-grid">
+          <label class="field" for="inputApi">
+            <span>Địa chỉ API</span>
+            <input type="text" id="inputApi" class="input" placeholder="http://127.0.0.1:8000" spellcheck="false" />
+          </label>
+          <label class="field" for="selectDetector">
+            <span>Bộ phát hiện khuôn mặt phía trình duyệt</span>
+            <select id="selectDetector" class="select">
+              <option value="auto">Tự động (ưu tiên FaceDetector)</option>
+              <option value="native">FaceDetector của trình duyệt</option>
+              <option value="mediapipe">MediaPipe (tải từ CDN)</option>
+              <option value="manual">Đánh dấu thủ công</option>
+            </select>
+          </label>
+          <label class="field" for="inputMaxWidth">
+            <span>Chiều rộng ảnh gửi tối đa (px, 0 = giữ nguyên)</span>
+            <input type="number" id="inputMaxWidth" class="input" min="0" max="4096" step="32" value="0" />
+          </label>
+          <label class="field" for="inputTimeout">
+            <span>Thời gian chờ tối đa cho mỗi request (ms)</span>
+            <input type="number" id="inputTimeout" class="input" min="1000" max="60000" step="500" value="8000" />
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary btn-sm" id="btnSaveConfig">Lưu cấu hình</button>
+          <button type="button" class="btn btn-sm" id="btnResetConfig">Về mặc định</button>
+          <label class="switch" for="swMirror">
+            <input type="checkbox" id="swMirror" checked />
+            <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+            <span class="switch-label">Lật gương video</span>
+          </label>
+        </div>
+        <p class="hint" id="configHint">Cấu hình lưu trong localStorage và có thể ghi đè bằng tham số trên thanh địa chỉ:
+          <code>?api=http://127.0.0.1:8000&amp;detector=native&amp;interval=400&amp;quality=0.85&amp;maxWidth=960</code>.
+          Để trống “Địa chỉ API” nghĩa là gọi cùng origin với trang (dùng khi chạy <code>python serve.py</code> có proxy).</p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Phân tích ảnh tĩnh</h2></div>
+        <p class="hint">Dùng khi không bật được camera: chọn ảnh JPEG/PNG, bộ phát hiện phía trình duyệt tìm khuôn mặt (nếu có), rồi gửi một lần tới API.</p>
+        <div class="toolbar toolbar-tight">
+          <input type="file" id="inputFile" class="input-file" accept="image/jpeg,image/png" />
+          <button type="button" class="btn btn-sm" id="btnAnalyzeFile" disabled>Phân tích ảnh</button>
+        </div>
+        <div class="stage-wrap stage-wrap-static">
+          <div class="stage stage-static" id="staticStage">
+            <img id="staticImage" alt="Ảnh đang phân tích" />
+            <canvas id="staticOverlay" aria-label="Lớp phủ kết quả trên ảnh tĩnh"></canvas>
+            <div class="stage-empty" id="staticEmpty"><p>Chưa chọn ảnh.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Nhật ký các lần gửi</h2><button type="button" class="btn btn-ghost btn-sm" id="btnClearLog">Xóa nhật ký</button></div>
+        <div class="table-wrap">
+          <table class="log-table">
+            <thead>
+              <tr><th>Thời điểm</th><th>Mặt</th><th>Gửi–nhận</th><th>Server</th><th>Trạng thái</th></tr>
+            </thead>
+            <tbody id="logBody"><tr class="empty-row"><td colspan="5">Chưa có lần gửi nào.</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <footer class="app-footer">
+    <p>
+      Giao thức: <code>POST /api/v1/predict</code> multipart với <code>image</code> (JPEG/PNG) và <code>faces</code> (JSON array);
+      <code>GET /health</code> để kiểm tra máy chủ. Nhãn: <code>without_mask</code> · <code>with_mask</code> · <code>mask_weared_incorrect</code>.
+    </p>
+  </footer>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script src="detectors.js"></script>
+  <script src="ui.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

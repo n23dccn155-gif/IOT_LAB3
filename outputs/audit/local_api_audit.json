@@ -1,0 +1,91 @@
+{
+  "scope": "Local laptop only; VOC boxes supplied, not browser face detection; 5 requests per face count",
+  "source": "maksssksksss156.png",
+  "ground_truth": [
+    {
+      "expected": "without_mask",
+      "predicted": "without_mask",
+      "confidence": 0.755355,
+      "correct": true
+    },
+    {
+      "expected": "with_mask",
+      "predicted": "with_mask",
+      "confidence": 0.993321,
+      "correct": true
+    },
+    {
+      "expected": "mask_weared_incorrect",
+      "predicted": "with_mask",
+      "confidence": 0.63789,
+      "correct": false
+    }
+  ],
+  "response": {
+    "request_id": "4e6d948a-7a20-4f84-9a4f-a7cea47a8bb9",
+    "image": {
+      "width": 400,
+      "height": 267
+    },
+    "predictions": [
+      {
+        "id": "audit-0",
+        "label": "without_mask",
+        "confidence": 0.755355,
+        "box": {
+          "x": 0,
+          "y": 44,
+          "width": 19,
+          "height": 20
+        },
+        "inference_ms": 32.564
+      },
+      {
+        "id": "audit-1",
+        "label": "with_mask",
+        "confidence": 0.993321,
+        "box": {
+          "x": 326,
+          "y": 32,
+          "width": 26,
+          "height": 27
+        },
+        "inference_ms": 32.564
+      },
+      {
+        "id": "audit-2",
+        "label": "with_mask",
+        "confidence": 0.63789,
+        "box": {
+          "x": 365,
+          "y": 69,
+          "width": 20,
+          "height": 22
+        },
+        "inference_ms": 32.564
+      }
+    ],
+    "total_inference_ms": 97.691
+  },
+  "source_hashes_crossing_splits": 0,
+  "latency": [
+    {
+      "faces": 1,
+      "requests": 5,
+      "rtt_mean_ms": 84.778,
+      "inference_mean_ms": 58.589
+    },
+    {
+      "faces": 2,
+      "requests": 5,
+      "rtt_mean_ms": 100.235,
+      "inference_mean_ms": 66.357
+    },
+    {
+      "faces": 3,
+      "requests": 5,
+      "rtt_mean_ms": 117.821,
+      "inference_mean_ms": 78.631
+    }
+  ]
+}
